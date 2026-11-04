@@ -129,11 +129,11 @@ class OnThisDay_Shortcode {
 				<?php endif; ?>
 			<?php endforeach; ?>
 			<p class="on-this-day-footer">
-				<?php esc_html_e( 'WP On This Day news sourced from', 'on-this-day' ); ?>
+				<?php esc_html_e( 'Maddog On This Day news sourced from', 'on-this-day' ); ?>
 				<a href="<?php echo esc_url( $source_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Wikipedia', 'on-this-day' ); ?></a>
 				(<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'CC BY-SA 4.0', 'on-this-day' ); ?></a>)
 				-sysop- &middot;
-				<a href="https://github.com/md99999/WP-On-this-day" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Source on GitHub', 'on-this-day' ); ?></a>
+				<a href="https://github.com/md99999/maddog-on-this-day" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Source on GitHub', 'on-this-day' ); ?></a>
 				<?php if ( $church && $church['day'] ) : ?>
 					&middot; <?php esc_html_e( 'Liturgical calendar from the', 'on-this-day' ); ?>
 					<a href="<?php echo esc_url( OnThisDay_Church::CALENDAR_HOME ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Church Calendar API', 'on-this-day' ); ?></a>

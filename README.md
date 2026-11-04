@@ -12,7 +12,7 @@ A WordPress plugin that shows historical events which happened on today's date, 
 - **Faith entries:** entries about church history and people of faith can be favoured or shown on their own. An entry counts as faith-related when its text, or a Wikipedia article it links to, contains one of the faith keywords (editable in Settings). By default about a third of each list are faith entries when the day has them; `faith="1"` puts them first and `onlyfaith="1"` shows only them.
 - **Today in the Church:** with `faith="1"` or `onlyfaith="1"`, a short section between the events and the births gives the day's celebrations from the Roman Catholic liturgical calendar (including movable feasts such as Easter, Pentecost and the Advent Sundays), the church season and week, and up to five Christian feast days from Wikipedia.
 - **Daily caching:** each day's Wikipedia lists are downloaded once and shared by every shortcode and widget on the site, whatever their count or mode, and the day's selection is cached until local midnight, so every visitor sees the same list and the plugin isn't hitting Wikipedia on every page load. If Wikipedia can't be reached, the plugin waits 15 minutes before trying again rather than slowing every page view.
-- **Attribution footer:** the list ends with "WP On This Day news sourced from Wikipedia (CC BY-SA 4.0) -sysop- · Source on GitHub", where Wikipedia links to that day's Wikipedia article, CC BY-SA 4.0 links to the license, and Source on GitHub links to this repository; -sysop- is plain text. It appears wherever the shortcode or widget is used. Wikipedia's text is available under the [Creative Commons Attribution-ShareAlike 4.0 license](https://creativecommons.org/licenses/by-sa/4.0/), so the footer credits the source and links to that license; the Wikipedia article it links to lists its authors in the page history.
+- **Attribution footer:** the list ends with "Maddog On This Day news sourced from Wikipedia (CC BY-SA 4.0) -sysop- · Source on GitHub", where Wikipedia links to that day's Wikipedia article, CC BY-SA 4.0 links to the license, and Source on GitHub links to this repository; -sysop- is plain text. It appears wherever the shortcode or widget is used. Wikipedia's text is available under the [Creative Commons Attribution-ShareAlike 4.0 license](https://creativecommons.org/licenses/by-sa/4.0/), so the footer credits the source and links to that license; the Wikipedia article it links to lists its authors in the page history.
 - **Admin setting:** Settings > On This Day lets you set the default number of events shown (1-100, default 15); the births section uses the same number. A shortcode's `count` attribute overrides this per instance.
 
 ## Usage
@@ -98,7 +98,7 @@ Go to **Settings > On This Day** to set the default number of events (1-100, def
 
 ### Option A: Upload the zip via wp-admin
 
-1. Download the plugin zip (e.g. `WP-on-this-day-1.0.1.zip`).
+1. Download the plugin zip (e.g. `maddog-on-this-day-1.0.1.zip`).
 2. In wp-admin, go to **Plugins > Add New Plugin > Upload Plugin**.
 3. Choose the zip file and click **Install Now**.
 4. Click **Activate Plugin**.
@@ -106,14 +106,14 @@ Go to **Settings > On This Day** to set the default number of events (1-100, def
 
 ### Option B: Manual install (FTP / local dev)
 
-1. Unzip the plugin so you have a `WP-on-this-day/` folder containing `on-this-day.php`, `includes/`, and `assets/`.
+1. Unzip the plugin so you have a `maddog-on-this-day/` folder containing `on-this-day.php`, `includes/`, and `assets/`.
 2. Copy that folder into your site's `wp-content/plugins/` directory (via FTP/SFTP, or directly on disk for a local dev site, e.g. Local by Flywheel: `app/public/wp-content/plugins/`).
 3. In wp-admin, go to **Plugins** and click **Activate** under "On This Day".
 4. Add the `[on_this_day]` shortcode to a page, or add the "On This Day" widget to a widget area.
 
 ### Installing from GitHub
 
-The repository root *is* the plugin (no build step, no dependencies), so GitHub's **Code > Download ZIP** works for a quick install. GitHub names the folder `WP-On-this-day-main`, so WordPress installs it under that name; uploading a differently named zip later installs a second copy instead of updating the first. For a clean install that updates in place, build a release zip (below).
+The repository root *is* the plugin (no build step, no dependencies), so GitHub's **Code > Download ZIP** works for a quick install. GitHub names the folder `maddog-on-this-day-main`, so WordPress installs it under that name; uploading a differently named zip later installs a second copy instead of updating the first. For a clean install that updates in place, build a release zip (below).
 
 **A git clone carries files a web server should not serve.** Chiefly `.git`, which holds the project's entire history. (GitHub's Download ZIP is an export, so it has no `.git`; this applies to a working copy you cloned or copied from your own machine.) Release zips leave out this README and the `docs/` folder, so an installed plugin has no Markdown files for anyone to read. For copies installed some other way, the plugin ships an `.htaccess` that refuses `.git`, `*.md`, logs and editor leftovers, and every directory has an `index.php` so nothing can be listed. (An `index.php` only stops a folder being listed; it cannot stop a file being requested by name, which is why the server rules below are needed.) `.htaccess` is read by Apache only, so on nginx add this to the server block:
 
@@ -136,13 +136,17 @@ Building with `git archive` (below) is strongly preferred. If you make the zip m
 - logs, backups and scratch files: `*.log`, `*.bak`, `*.orig`, `*.rej`, `*.swp`
 - anything of your own: notes, test files, credentials or `.env` files
 
-What belongs in the zip is `on-this-day.php`, `uninstall.php`, `LICENSE`, `.htaccess`, the `index.php` files, and the `includes/` and `assets/` folders. Put them inside a single top-level folder named `WP-on-this-day`, so the zip contains `WP-on-this-day/on-this-day.php`. Check the finished zip by opening it before you upload. The plugin's Install health panel will warn you if a stray `.git`, `.gitignore` or `.gitattributes` slips through.
+What belongs in the zip is `on-this-day.php`, `uninstall.php`, `LICENSE`, `.htaccess`, the `index.php` files, and the `includes/` and `assets/` folders. Put them inside a single top-level folder named `maddog-on-this-day`, so the zip contains `maddog-on-this-day/on-this-day.php`. Check the finished zip by opening it before you upload. The plugin's Install health panel will warn you if a stray `.git`, `.gitignore` or `.gitattributes` slips through.
+
+### Upgrading from WP-on-this-day
+
+This plugin used to be called WP-on-this-day, and release zips used to unpack to a `WP-on-this-day/` folder. They now unpack to `maddog-on-this-day/`. If your site still has the old folder, deactivate the plugin, rename the folder to `maddog-on-this-day` over FTP, SFTP or your host's file manager, and activate it again. Settings, the `[on_this_day]` shortcode and placed widgets are unchanged, so nothing needs to be set up again. Until you do, the Install health panel shows a reminder.
 
 ### Install health
 
 The plugin checks itself, because documentation only helps people who read it. **Settings > On This Day** has an *Install health* panel, and an administrator sees a notice on the Plugins screen, if:
 
-- the folder is not named `WP-on-this-day` (for example `WP-On-this-day-main` from Download ZIP), which would make the next proper install a second copy;
+- the folder is not named `maddog-on-this-day` (for example `maddog-on-this-day-main` from Download ZIP, or `WP-on-this-day` from before the plugin was renamed), which would make the next proper install a second copy;
 - a second copy of the plugin is installed in `wp-content/plugins`;
 - repository-only files such as `.gitignore`, `.gitattributes` or `.github` are present, which a release zip never contains and usually means the zip was made by hand from a working copy;
 - a `.git` directory is present. The plugin makes one request to your own site to test whether the server actually serves it (the result is cached for a day), and reports an error if it does.
@@ -154,10 +158,10 @@ The plugin checks itself, because documentation only helps people who read it. *
 
 ## Building a release zip
 
-There is nothing to compile. A release zip is the tracked files inside a `WP-on-this-day/` folder. From the repository root (requires Git):
+There is nothing to compile. A release zip is the tracked files inside a `maddog-on-this-day/` folder. From the repository root (requires Git):
 
 ```
-git archive --format=zip --prefix=WP-on-this-day/ -o WP-on-this-day-<version>.zip HEAD
+git archive --format=zip --prefix=maddog-on-this-day/ -o maddog-on-this-day-<version>.zip HEAD
 ```
 
 Use the version from the plugin header in `on-this-day.php`. This builds from the last commit (so uncommitted or stray files never ship), writes the forward-slash paths WordPress requires, and leaves out repo-only files (`.gitignore`, `.gitattributes`, `docs/`, `README.md`). Upload the result via **Plugins > Add New Plugin > Upload Plugin**; if a previous version is installed, choose **Replace current with uploaded**.
