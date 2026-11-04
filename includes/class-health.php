@@ -13,12 +13,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 class OnThisDay_Health {
 
 	/** The folder name a release zip unpacks to, and the one updates will use. */
-	const SLUG = 'WP-on-this-day';
+	const SLUG = 'maddog-on-this-day';
+
+	/** The folder name used before the plugin was renamed; installs made then still live there. */
+	const LEGACY_SLUG = 'WP-on-this-day';
 
 	const MAIN_FILE = 'on-this-day.php';
 
 	/** Build instructions; README.md is not shipped in release zips, so link to it on GitHub. */
-	const BUILD_DOCS_URL = 'https://github.com/md99999/WP-On-this-day#building-a-release-zip';
+	const BUILD_DOCS_URL = 'https://github.com/md99999/maddog-on-this-day#building-a-release-zip';
 
 	/**
 	 * @return array[] List of ['level' => 'error'|'warning', 'title' => string, 'body' => string (HTML)].
@@ -33,7 +36,7 @@ class OnThisDay_Health {
 		return $out;
 	}
 
-	/** The folder this copy lives in, e.g. "WP-On-this-day-main". */
+	/** The folder this copy lives in, e.g. "maddog-on-this-day-main". */
 	public static function folder() {
 		return basename( untrailingslashit( ONTHISDAY_PLUGIN_DIR ) );
 	}
@@ -116,6 +119,18 @@ class OnThisDay_Health {
 	private static function check_folder() {
 		if ( self::folder() === self::SLUG ) {
 			return null;
+		}
+		if ( self::folder() === self::LEGACY_SLUG ) {
+			return array(
+				'level' => 'warning',
+				'title' => 'The plugin folder still has its old name',
+				'body'  => '<p>This copy is installed as <code>wp-content/plugins/' . esc_html( self::folder() ) . '</code>.'
+					. ' The plugin has been renamed, and release zips now unpack to <code>' . esc_html( self::SLUG ) . '</code>,'
+					. ' so uploading one would add a <em>second</em> copy instead of updating this one.</p>'
+					. '<p>Deactivate the plugin, rename the folder to <code>' . esc_html( self::SLUG ) . '</code> over FTP, SFTP'
+					. ' or your host\'s file manager, then activate <strong>On This Day</strong> again on the Plugins screen.'
+					. ' Your settings and widgets are kept.</p>',
+			);
 		}
 		return array(
 			'level' => 'warning',
