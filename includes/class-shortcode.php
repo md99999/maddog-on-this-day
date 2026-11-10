@@ -21,6 +21,14 @@ class OnThisDay_Shortcode {
 			array(),
 			ONTHISDAY_VERSION
 		);
+
+		// Fixed CSS only; nothing from the database is written into the stylesheet.
+		if ( OnThisDay_Admin::transparent_background() ) {
+			wp_add_inline_style(
+				'on-this-day',
+				'.on-this-day, .widget_on_this_day_widget { background: transparent !important; background-image: none !important; }'
+			);
+		}
 	}
 
 	/**
