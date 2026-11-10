@@ -46,6 +46,16 @@ class OnThisDay_Admin {
 			)
 		);
 
+		register_setting(
+			'onthisday_settings',
+			'onthisday_transparent_bg',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_checkbox' ),
+				'default'           => false,
+			)
+		);
+
 		add_settings_section( 'onthisday_main', '', '__return_false', 'on-this-day' );
 
 		add_settings_field(
@@ -63,6 +73,36 @@ class OnThisDay_Admin {
 			'on-this-day',
 			'onthisday_main'
 		);
+
+		add_settings_field(
+			'onthisday_transparent_bg',
+			__( 'Background', 'on-this-day' ),
+			array( __CLASS__, 'render_transparent_field' ),
+			'on-this-day',
+			'onthisday_main'
+		);
+	}
+
+	/** A checkbox posts "1" when ticked and nothing when not; store a strict boolean either way. */
+	public static function sanitize_checkbox( $value ) {
+		return ! empty( $value ) && '1' === (string) $value;
+	}
+
+	/** Whether the list and its widget box should have no background of their own. */
+	public static function transparent_background() {
+		return (bool) get_option( 'onthisday_transparent_bg', false );
+	}
+
+	public static function render_transparent_field() {
+		?>
+		<label>
+			<input type="checkbox" name="onthisday_transparent_bg" value="1" <?php checked( self::transparent_background() ); ?>>
+			<?php esc_html_e( 'Transparent background', 'on-this-day' ); ?>
+		</label>
+		<p class="description">
+			<?php esc_html_e( 'The plugin sets no background of its own; any colour behind the list comes from your theme. Tick this to clear the background on the list and on the On This Day widget box, so the page behind shows through.', 'on-this-day' ); ?>
+		</p>
+		<?php
 	}
 
 	/** Keep letters, digits, spaces, hyphens and apostrophes in each keyword; store as a comma-separated list. */
