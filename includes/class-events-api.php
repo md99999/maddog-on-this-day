@@ -17,7 +17,20 @@ class OnThisDay_Events_API {
 	/** Seconds to wait before retrying Wikipedia after a failed download (15 minutes). */
 	const RETRY_AFTER = 900;
 
-	const DEFAULT_FAITH_KEYWORDS ='church, pope, priest, theologian, bishop, archbishop, cardinal, pastor, lutheran, protestant, catholic, missionary, nun, abbot, evangelist';
+	/** Part of every cache key; bumped when cached data is validated differently, so old entries are not reused. */
+	const CACHE_VERSION = 'v2';
+
+	/** Largest response read from Wikipedia; a day's births feed is the biggest, at around 1-2 MB. */
+	const MAX_RESPONSE_BYTES = 10485760;
+
+	/** Most characters kept from an entry's text, and from its linked articles' descriptions. */
+	const MAX_TEXT_LENGTH = 1000;
+
+	/** Limits on the faith keyword list, so a huge list cannot push the matching regex past PCRE's limits. */
+	const MAX_KEYWORDS       = 100;
+	const MAX_KEYWORD_LENGTH = 50;
+
+	const DEFAULT_FAITH_KEYWORDS = 'church, pope, priest, theologian, bishop, archbishop, cardinal, pastor, lutheran, protestant, catholic, missionary, nun, abbot, evangelist';
 
 	/**
 	 * Get a randomly-selected, year-ascending list of events for today.
@@ -48,17 +61,23 @@ class OnThisDay_Events_API {
 	}
 
 	/**
-	 * Split a comma- or line-separated keyword list into unique lowercase words.
+	 * Split a comma- or line-separated keyword list into unique lowercase words, at most
+	 * MAX_KEYWORDS of them and each at most MAX_KEYWORD_LENGTH characters.
 	 *
 	 * @param string $raw Keyword list.
 	 * @return string[]
 	 */
 	public static function parse_keywords( $raw ) {
 		$words = array();
-		foreach ( preg_split( '/[,\r\n]+/', (string) $raw ) as $word ) {
-			$word = strtolower( trim( $word ) );
-			if ( '' !== $word ) {
-				$words[ $word ] = true;
+		$parts = preg_split( '/[,\r\n]+/', is_scalar( $raw ) ? (string) $raw : '' );
+		foreach ( is_array( $parts ) ? $parts : array() as $word ) {
+			$word = function_exists( 'mb_strtolower' ) ? mb_strtolower( trim( $word ), 'UTF-8' ) : strtolower( trim( $word ) );
+			if ( '' === $word || ( function_exists( 'mb_strlen' ) ? mb_strlen( $word, 'UTF-8' ) : strlen( $word ) ) > self::MAX_KEYWORD_LENGTH ) {
+				continue;
+			}
+			$words[ $word ] = true;
+			if ( count( $words ) >= self::MAX_KEYWORDS ) {
+				break;
 			}
 		}
 		return array_keys( $words );
@@ -84,10 +103,11 @@ class OnThisDay_Events_API {
 		$month = (int) date( 'n', $now );
 		$day   = (int) date( 'j', $now );
 
-		$cache_key = 'onthisday_' . $type . '_' . $mode . '_' . $month . '_' . $day . '_' . $count . '_' . substr( md5( implode( ',', $keywords ) ), 0, 8 );
+		$cache_key = 'onthisday_' . self::CACHE_VERSION . '_' . $type . '_' . $mode . '_' . $month . '_' . $day . '_' . $count . '_' . substr( md5( implode( ',', $keywords ) ), 0, 8 );
 		$cached    = get_transient( $cache_key );
 
-		if ( false !== $cached ) {
+		// Anything but a list here means a corrupted or foreign cache entry: rebuild rather than render it.
+		if ( is_array( $cached ) ) {
 			return $cached;
 		}
 
@@ -101,7 +121,8 @@ class OnThisDay_Events_API {
 		$faith   = array();
 		$other   = array();
 		foreach ( $pool as $item ) {
-			if ( $pattern && preg_match( $pattern, $item['text'] . ' ' . $item['about'] ) ) {
+			// preg_match() returns false on a regex error; that counts as no match rather than as faith.
+			if ( $pattern && 1 === preg_match( $pattern, $item['text'] . ' ' . $item['about'] ) ) {
 				$faith[] = $item;
 			} else {
 				$other[] = $item;
@@ -154,7 +175,7 @@ class OnThisDay_Events_API {
 	 * @return array[] The pool, or an empty array if it is unavailable.
 	 */
 	private static function get_pool( $type, $month, $day, $now ) {
-		$key    = 'onthisday_pool_' . $type . '_' . $month . '_' . $day;
+		$key    = 'onthisday_pool_' . self::CACHE_VERSION . '_' . $type . '_' . $month . '_' . $day;
 		$cached = get_transient( $key );
 		if ( false !== $cached ) {
 			return is_array( $cached ) ? $cached : array();
@@ -214,23 +235,15 @@ class OnThisDay_Events_API {
 	 *                 where 'about' holds the linked articles' short descriptions, used for faith matching.
 	 */
 	private static function fetch_pool( $type, $month, $day ) {
-		$url = sprintf( self::API_URL, $type, $month, $day );
-
-		$response = wp_remote_get(
-			$url,
-			array(
-				'timeout' => 10,
-				'headers' => array(
-					'User-Agent' => 'WordPress/OnThisDayPlugin (' . home_url() . ')',
-				),
-			)
-		);
-
-		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+		if ( ! in_array( $type, array( 'events', 'births' ), true ) ) {
 			return array();
 		}
 
-		$body  = json_decode( wp_remote_retrieve_body( $response ), true );
+		$body = OnThisDay_Http::get_json( sprintf( self::API_URL, $type, $month, $day ), 10, self::MAX_RESPONSE_BYTES );
+		if ( null === $body ) {
+			return array();
+		}
+
 		$items = isset( $body[ $type ] ) && is_array( $body[ $type ] ) ? $body[ $type ] : array();
 
 		$pool = array();
@@ -241,13 +254,19 @@ class OnThisDay_Events_API {
 				continue;
 			}
 
+			$text = OnThisDay_Http::clean_text( $item['text'], self::MAX_TEXT_LENGTH );
+			if ( '' === $text ) {
+				continue;
+			}
+
 			$page_url     = '';
 			$descriptions = array();
 			if ( ! empty( $item['pages'] ) && is_array( $item['pages'] ) ) {
-				if ( ! empty( $item['pages'][0]['content_urls']['desktop']['page'] ) && is_string( $item['pages'][0]['content_urls']['desktop']['page'] ) ) {
-					$page_url = $item['pages'][0]['content_urls']['desktop']['page'];
+				if ( ! empty( $item['pages'][0]['content_urls']['desktop']['page'] ) ) {
+					// Only https links to Wikipedia; anything else is shown as plain text.
+					$page_url = OnThisDay_Http::wiki_url( $item['pages'][0]['content_urls']['desktop']['page'] );
 				}
-				foreach ( $item['pages'] as $page ) {
+				foreach ( array_slice( $item['pages'], 0, 20 ) as $page ) {
 					if ( is_array( $page ) && ! empty( $page['description'] ) && is_string( $page['description'] ) ) {
 						$descriptions[] = $page['description'];
 					}
@@ -256,9 +275,9 @@ class OnThisDay_Events_API {
 
 			$pool[] = array(
 				'year'  => (int) $item['year'],
-				'text'  => wp_strip_all_tags( $item['text'] ),
+				'text'  => $text,
 				'url'   => $page_url,
-				'about' => wp_strip_all_tags( implode( ' | ', $descriptions ) ),
+				'about' => OnThisDay_Http::clean_text( implode( ' | ', $descriptions ), self::MAX_TEXT_LENGTH ),
 			);
 		}
 

@@ -75,7 +75,7 @@ For example:
 - Both parts are cached until midnight. If one source fails, the other still shows; if both fail, the section is hidden and the rest of the page is unaffected. A failed request is retried after an hour rather than on every page load.
 - When the calendar is shown, the footer adds "Liturgical calendar from the Church Calendar API".
 
-The Church Calendar API is free software (LGPL 3) run by a volunteer, Jakub Pavlík, and is intended for "developers of websites and other Internet applications". It is only available over plain `http://`. The plugin fetches it server-side and escapes everything it displays, so this causes no mixed-content warnings, but the request itself is not encrypted.
+The Church Calendar API is free software (LGPL 3) run by a volunteer, Jakub Pavlík, and is intended for "developers of websites and other Internet applications". It is only available over plain `http://`. The plugin fetches it server-side and escapes everything it displays, so this causes no mixed-content warnings, but the request itself is not encrypted. Because of that, the plugin treats the response as untrusted: it does not send your site's address with the request, it reads at most 256 KB, it refuses redirects to private or internal addresses, it accepts colours only from a fixed list, and it shows titles as plain text capped at 200 characters.
 
 ### Widget
 
