@@ -182,15 +182,19 @@ class OnThisDay_Health {
 		}
 		$url = plugins_url( '.git/HEAD', ONTHISDAY_PLUGIN_DIR . self::MAIN_FILE );
 		// Follow redirects, or a site that sends http to https would look safe when it is not.
-		$response = wp_remote_get(
+		// wp_safe_remote_get() still allows this site's own host, but re-checks every redirect hop.
+		// Certificates are verified: a site whose certificate WordPress cannot verify gets "could not
+		// be checked", which is reported as a warning, rather than trusting an unauthenticated answer.
+		$response = wp_safe_remote_get(
 			$url,
 			array(
-				'timeout'     => 5,
-				'redirection' => 3,
-				'sslverify'   => false,
+				'timeout'             => 5,
+				'redirection'         => 3,
+				'limit_response_size' => 1024,
 			)
 		);
 		if ( is_wp_error( $response ) ) {
+			OnThisDay_Http::log( 'install health check failed', $url, $response->get_error_code() );
 			$result = null;
 		} else {
 			$code = (int) wp_remote_retrieve_response_code( $response );

@@ -85,7 +85,7 @@ class OnThisDay_Admin {
 
 	/** A checkbox posts "1" when ticked and nothing when not; store a strict boolean either way. */
 	public static function sanitize_checkbox( $value ) {
-		return ! empty( $value ) && '1' === (string) $value;
+		return is_scalar( $value ) && '1' === (string) $value;
 	}
 
 	/** Whether the list and its widget box should have no background of their own. */
@@ -108,7 +108,7 @@ class OnThisDay_Admin {
 	/** Keep letters, digits, spaces, hyphens and apostrophes in each keyword; store as a comma-separated list. */
 	public static function sanitize_keywords( $value ) {
 		$words = array();
-		foreach ( OnThisDay_Events_API::parse_keywords( sanitize_textarea_field( (string) $value ) ) as $word ) {
+		foreach ( OnThisDay_Events_API::parse_keywords( sanitize_textarea_field( is_scalar( $value ) ? (string) $value : '' ) ) as $word ) {
 			$word = trim( preg_replace( "/[^\p{L}\p{N} '-]+/u", '', $word ) );
 			if ( '' !== $word ) {
 				$words[] = $word;
@@ -128,7 +128,7 @@ class OnThisDay_Admin {
 	}
 
 	public static function sanitize_count( $value ) {
-		$value = (int) $value;
+		$value = is_scalar( $value ) ? (int) $value : 15;
 
 		if ( $value < 1 ) {
 			$value = 1;
@@ -150,6 +150,11 @@ class OnThisDay_Admin {
 	}
 
 	public static function render_settings_page() {
+		// WordPress already checks this before calling the page; checked again so the page and the
+		// install health panel (which shows server paths) can never render for anyone else.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Sorry, you are not allowed to manage options for this site.', 'on-this-day' ), 403 );
+		}
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'On This Day Settings', 'on-this-day' ); ?></h1>

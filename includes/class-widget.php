@@ -22,8 +22,8 @@ class OnThisDay_Widget extends WP_Widget {
 	}
 
 	public function widget( $args, $instance ) {
-		$title = ! empty( $instance['title'] ) ? $instance['title'] : '';
-		$count = ! empty( $instance['count'] ) ? (int) $instance['count'] : (int) get_option( 'onthisday_default_count', 15 );
+		$title = ! empty( $instance['title'] ) && is_string( $instance['title'] ) ? $instance['title'] : '';
+		$count = ! empty( $instance['count'] ) && is_scalar( $instance['count'] ) ? (int) $instance['count'] : (int) get_option( 'onthisday_default_count', 15 );
 		$count = max( 1, min( 100, $count ) );
 		$mode  = isset( $instance['mode'] ) && in_array( $instance['mode'], OnThisDay_Events_API::MODES, true ) ? $instance['mode'] : 'mix';
 		$church = isset( $instance['church'] ) && in_array( $instance['church'], array( 'show', 'hide' ), true ) ? 'show' === $instance['church'] : null;
@@ -40,8 +40,8 @@ class OnThisDay_Widget extends WP_Widget {
 	}
 
 	public function form( $instance ) {
-		$title = isset( $instance['title'] ) ? $instance['title'] : '';
-		$count = isset( $instance['count'] ) ? $instance['count'] : '';
+		$title = isset( $instance['title'] ) && is_string( $instance['title'] ) ? $instance['title'] : '';
+		$count = isset( $instance['count'] ) && is_scalar( $instance['count'] ) ? $instance['count'] : '';
 		$mode   = isset( $instance['mode'] ) ? $instance['mode'] : 'mix';
 		$church = isset( $instance['church'] ) ? $instance['church'] : 'auto';
 		$churches = array(
@@ -84,8 +84,8 @@ class OnThisDay_Widget extends WP_Widget {
 
 	public function update( $new_instance, $old_instance ) {
 		$instance          = array();
-		$instance['title'] = sanitize_text_field( $new_instance['title'] );
-		$instance['count'] = ! empty( $new_instance['count'] ) ? max( 1, min( 100, (int) $new_instance['count'] ) ) : '';
+		$instance['title'] = isset( $new_instance['title'] ) && is_string( $new_instance['title'] ) ? sanitize_text_field( $new_instance['title'] ) : '';
+		$instance['count'] = ! empty( $new_instance['count'] ) && is_scalar( $new_instance['count'] ) ? max( 1, min( 100, (int) $new_instance['count'] ) ) : '';
 		$instance['mode']  = isset( $new_instance['mode'] ) && in_array( $new_instance['mode'], OnThisDay_Events_API::MODES, true ) ? $new_instance['mode'] : 'mix';
 		$instance['church'] = isset( $new_instance['church'] ) && in_array( $new_instance['church'], self::CHURCH_CHOICES, true ) ? $new_instance['church'] : 'auto';
 		return $instance;
